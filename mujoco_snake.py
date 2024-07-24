@@ -27,7 +27,7 @@ class Main:
     model = mujoco.MjModel.from_xml_path(f"{script_dir}/src/scene.xml")
     data = mujoco.MjData(model)
 
-    self.timestep = model.opt.timestep
+    self.time_step = model.opt.timestep
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
       viewer.cam.type = 1
@@ -56,6 +56,17 @@ class Main:
         if time_until_next_step > 0:
           time.sleep(time_until_next_step)    
 
+  def media_pipe_communication(self):
+    if(self.data != None):
+      if self.data[0] is not None:
+        self.frequency = self.data[0]
+      if self.data[1] is not None:
+        self.offset = self.data[1]
+      print(self.data)
+    else:
+      print("No data")
+
+
   def server(self, use_socket=False, ip="127.0.0.1", port=8000):
     if use_socket:
       server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -75,7 +86,7 @@ class Main:
 
   def move_snake(self, amp, freq, offset, direction, phase=np.pi/4):
     p = np.zeros(12)
-    self.theta+= freq*self.timestep
+    self.theta+= freq*self.time_step
     for i in range(12):
       p[i] = amp*np.sin(self.theta + direction*i*phase) + offset
     return p

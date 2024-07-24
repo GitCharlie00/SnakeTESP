@@ -18,6 +18,7 @@ class Main(mujoco_snake.Main):
         self.time_step = 0.12
         while True:
             step_start = time.time()
+            self.media_pipe_communication
 
             target_q = self.get_target_q()
             message = ",".join(map(str, target_q))
