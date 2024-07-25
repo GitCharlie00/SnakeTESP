@@ -7,8 +7,11 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
+prev_left_wrist_x = 0.5
+prev_left_wrist_y = 0.5
+
 def main(use_socket=True, ip="127.0.0.1", port=8000):
-  # For webcam input:
+
   cap = cv2.VideoCapture(0)
 
   if use_socket:
@@ -54,39 +57,54 @@ def main(use_socket=True, ip="127.0.0.1", port=8000):
       if cv2.waitKey(5) & 0xFF == 27:
         break
 
-  cap.release()
+    cap.release()
 
-  if use_socket:
-    client_socket.close()
+    if use_socket:
+        client_socket.close()
 
 def get_joint_angles(results):
-  # Add your code here
-  # For example, to get right shoulder location, use [results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x, results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y]
-  # See link below for location of body parts
-  # https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
-  left_wrist = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST]
-  midpoint = 0.5
-  max = 0.95
-  min = 0.05
-  print("Left wrist ", left_wrist.x, " Right wrist ",  left_wrist.y)
-  if (left_wrist.y < max and left_wrist.y > min):
-    speed=(left_wrist.y-0.5)*(-2)
-  else:
-    speed = None
-  
-  if (left_wrist.x < max and left_wrist.x > min):
-    direction=(left_wrist.x-0.5)*0.75
-  else:
-    direction = None
+    global prev_left_wrist_x, prev_left_wrist_y
+    # Add your code here
+    # For example, to get right shoulder location, use [results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x, results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y]
+    # See link below for location of body parts
+    # https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
+    left_wrist = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST]
+    midpoint = 0.5
+    max = 0.95
+    min = 0.05
+    part_of_screen = 30
+    #   print("Left wrist ", left_wrist.x, " Right wrist ",  left_wrist.y)
+    multiplier = 1
+    if(np.abs(left_wrist.y - prev_left_wrist_y) < 1/part_of_screen):
+        multiplier = 2    
+    else:
+        print("speed ", left_wrist.y, " prev ", prev_left_wrist_y)
+    if (left_wrist.y < max and left_wrist.y > min):
+        speed=(left_wrist.y-0.5)*(-multiplier)
+    else:
+        speed = None
 
-  
-  if speed != None and direction != None: 
-    command = [speed, direction]
-  else: 
-    command = None
-  return command
+    multiplier = 0.2
+    if(np.abs(left_wrist.x - prev_left_wrist_x) < 1/part_of_screen):
+        multiplier = 0.75
+    else:
+        print("direction ", left_wrist.x, " prev ", prev_left_wrist_x)
+    if (left_wrist.x < max and left_wrist.x > min):
+        direction=(left_wrist.x-0.5)*multiplier
+    else:
+        direction = None
+    
+    if speed != None and direction != None: 
+        command = [speed, direction]
+    else: 
+        command = None
+    
+    prev_left_wrist_x = left_wrist.x
+    prev_left_wrist_y = left_wrist.y
+    return command
   
 if __name__ == "__main__":
+  
   use_socket = True
   ip = "127.0.0.1"
   port = 8000
