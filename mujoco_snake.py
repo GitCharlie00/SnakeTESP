@@ -61,9 +61,10 @@ class Main:
       if self.data[0] is not None:
         if self.data[0] < 0:
           self.direction = -1
+          self.frequency = self.data[0]*(-1)
         else:
           self.direction = 1
-        self.frequency = self.data[0]
+          self.frequency = self.data[0]
       if self.data[1] is not None:
         self.offset = self.data[1]
       print(self.data)
@@ -107,7 +108,7 @@ class Main:
 
 
 if __name__ == "__main__":
-  use_socket = True
+  use_socket = False
   ip = "127.0.0.1"
   port = 8000
 
