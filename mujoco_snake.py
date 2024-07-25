@@ -13,9 +13,9 @@ class Main:
     self.data = None
     self.snake_min = -3
     self.snake_max = 3
-    self.frequency = 1
+    self.frequency = 0
     self.old_frequency = 0
-    self.amp = 1
+    self.amp = 0.5
     self.start=False
     self.offset = 0
     self.direction = 1
@@ -59,12 +59,17 @@ class Main:
   def media_pipe_communication(self):
     if(self.data != None):
       if self.data[0] is not None:
+        if self.data[0] < 0:
+          self.direction = -1
+        else:
+          self.direction = 1
         self.frequency = self.data[0]
       if self.data[1] is not None:
         self.offset = self.data[1]
       print(self.data)
     else:
       print("No data")
+
 
 
   def server(self, use_socket=False, ip="127.0.0.1", port=8000):
@@ -88,7 +93,7 @@ class Main:
     p = np.zeros(12)
     self.theta+= freq*self.time_step
     for i in range(12):
-      p[i] = amp*np.sin(self.theta + direction*i*phase) + offset
+      p[i] = np.clip(amp*np.sin(self.theta + direction*i*phase) + offset, -0.3, 0.3)
     return p
 
   #  make it theta += omega*timestep
