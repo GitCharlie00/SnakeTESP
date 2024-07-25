@@ -11,14 +11,11 @@ class Main:
 
   def __init__(self):
     self.data = None
-    self.snake_min = -3
-    self.snake_max = 3
+    self.snake_min = -0.3
+    self.snake_max = 0.3
     self.frequency = 0
-    self.old_frequency = 0
     self.amp = 0.5
-    self.start=False
     self.offset = 0
-    self.direction = 1
     self.theta = 0
 
   #TODO: implement change direct
@@ -59,12 +56,6 @@ class Main:
   def media_pipe_communication(self):
     if(self.data != None):
       if self.data[0] is not None:
-        # if self.data[0] < 0:
-        #   self.direction = -1
-        #   self.frequency = self.data[0]*(-1)
-        # else:
-        #   self.direction = 1
-        #   self.frequency = self.data[0]
         self.frequency = self.data[0]
       if self.data[1] is not None:
         self.offset = self.data[1]
@@ -91,11 +82,11 @@ class Main:
       client_socket.close()
       server_socket.close()
 
-  def move_snake(self, amp, freq, offset, direction, phase=np.pi/4):
+  def move_snake(self, amp, freq, offset, phase=np.pi/4):
     p = np.zeros(12)
     self.theta+= freq*self.time_step
     for i in range(12):
-        p[i] = np.clip(amp*np.sin(self.theta + i*phase) + offset, -0.3, 0.3)
+        p[i] = np.clip(amp*np.sin(self.theta + i*phase) + offset, self.snake_min, self.snake_max)
     return p
 
   #  make it theta += omega*timestep
@@ -104,7 +95,7 @@ class Main:
 
   def get_target_q(self):
     # Snake controller
-    return self.move_snake(self.amp, self.frequency, self.offset, self.direction)
+    return self.move_snake(self.amp, self.frequency, self.offset)
     
 
 
