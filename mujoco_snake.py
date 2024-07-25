@@ -6,6 +6,7 @@ import threading
 import numpy as np
 import mujoco
 import mujoco.viewer
+import pickle as pkl
 
 class Main:
 
@@ -20,6 +21,9 @@ class Main:
     self.offset = 0
     self.direction = 1
     self.theta = 0
+    self.history = {
+      "q" : []
+    }
 
   #TODO: implement change direct
   def run(self):
@@ -92,9 +96,11 @@ class Main:
 
   def move_snake(self, amp, freq, offset, direction, phase=np.pi/4):
     p = np.zeros(12)
-    self.theta+= freq*self.time_step
+    self.theta += freq*self.time_step
     for i in range(12):
       p[i] = np.clip(amp*np.sin(self.theta + direction*i*phase) + offset, -0.3, 0.3)
+    
+    self.history["q"].append(p)
     return p
 
   #  make it theta += omega*timestep
@@ -108,7 +114,7 @@ class Main:
 
 
 if __name__ == "__main__":
-  use_socket = False
+  use_socket = True
   ip = "127.0.0.1"
   port = 8000
 
