@@ -59,12 +59,13 @@ class Main:
   def media_pipe_communication(self):
     if(self.data != None):
       if self.data[0] is not None:
-        if self.data[0] < 0:
-          self.direction = -1
-          self.frequency = self.data[0]*(-1)
-        else:
-          self.direction = 1
-          self.frequency = self.data[0]
+        # if self.data[0] < 0:
+        #   self.direction = -1
+        #   self.frequency = self.data[0]*(-1)
+        # else:
+        #   self.direction = 1
+        #   self.frequency = self.data[0]
+        self.frequency = self.data[0]
       if self.data[1] is not None:
         self.offset = self.data[1]
       print(self.data)
@@ -94,10 +95,7 @@ class Main:
     p = np.zeros(12)
     self.theta+= freq*self.time_step
     for i in range(12):
-      if direction < 0:
-        p[i] = np.clip(amp*np.sin(self.theta + direction*(i*phase)+np.pi) + offset, -0.3, 0.3)
-      else:
-        p[i] = np.clip(amp*np.sin(self.theta + direction*i*phase) + offset, -0.3, 0.3)
+        p[i] = np.clip(amp*np.sin(self.theta + i*phase) + offset, -0.3, 0.3)
     return p
 
   #  make it theta += omega*timestep
