@@ -7,7 +7,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 
-def main(use_socket=False, ip="127.0.0.1", port=8000):
+def main(use_socket=True, ip="127.0.0.1", port=8000):
   # For webcam input:
   cap = cv2.VideoCapture(0)
 
@@ -70,7 +70,7 @@ def get_joint_angles(results):
   min = 0.05
   print("Left wrist ", left_wrist.x, " Right wrist ",  left_wrist.y)
   if (left_wrist.y < max and left_wrist.y > min):
-    speed=(left_wrist.y-0.5)*(-8)
+    speed=(left_wrist.y-0.5)*(-2)
   else:
     speed = None
   
