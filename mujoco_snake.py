@@ -98,9 +98,10 @@ class Main:
     p = np.zeros(12)
     self.theta += freq*self.time_step
     for i in range(12):
-      p[i] = np.clip(amp*np.sin(self.theta + direction*i*phase) + offset, -0.3, 0.3)
-    
-    self.history["q"].append(p)
+      if direction < 0:
+        p[i] = np.clip(amp*np.sin(self.theta + direction*(i*phase)+np.pi) + offset, -0.3, 0.3)
+      else:
+        p[i] = np.clip(amp*np.sin(self.theta + direction*i*phase) + offset, -0.3, 0.3)
     return p
 
   #  make it theta += omega*timestep

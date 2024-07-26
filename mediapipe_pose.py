@@ -70,7 +70,7 @@ def get_joint_angles(results):
   min = 0.05
   print("Left wrist ", left_wrist.x, " Right wrist ",  left_wrist.y)
   if (left_wrist.y < max and left_wrist.y > min):
-    speed=(left_wrist.y-0.5)*(-2)
+    speed=(left_wrist.y-0.5)*(-50)
   else:
     speed = None
   
