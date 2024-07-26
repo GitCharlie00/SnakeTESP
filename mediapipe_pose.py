@@ -10,15 +10,22 @@ mp_pose = mp.solutions.pose
 prev_left_wrist_x = 0.5
 prev_left_wrist_y = 0.5
 
-min_coord = 0.05
-width = 0.25 
-height = 0.25
+rectangle_coord = 0.45
+width = 0.5
+height = 0.7
 
+min_x = 0.05
+max_x = 0.95
+min_y = 0.05
+max_y = 0.95
+boundaries = (min_x, min_y, max_x, max_y)
+
+min_coord = 0.05
 max_coord = 0.95
 midpoint = 0.5
 
 def main(use_socket=True, ip="127.0.0.1", port=8000):
-
+  global boundaries
   cap = cv2.VideoCapture(0)
 
   if use_socket:
@@ -26,8 +33,8 @@ def main(use_socket=True, ip="127.0.0.1", port=8000):
     client_socket.connect((ip, port))
 
   with mp_pose.Pose(
-      min_coord_coord_detection_confidence=0.5,
-      min_coord_coord_tracking_confidence=0.5) as pose:
+      min_detection_confidence=0.5,
+      min_tracking_confidence=0.5) as pose:
     while cap.isOpened():
       success, image = cap.read()
       if not success:
@@ -50,14 +57,18 @@ def main(use_socket=True, ip="127.0.0.1", port=8000):
           mp_pose.POSE_CONNECTIONS,
           landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
       # Flip the image horizontally for a selfie-view display.
+
       # Create a rectangle on the left side of the image
       image_height, image_width, _ = image.shape
-      left_rectangle_x = int(image_width * min_coord)
+      print(image_height, image_width)
+      left_rectangle_x = int(image_width * rectangle_coord)
       left_rectangle_y = int(image_height * midpoint - (height * image_height) / 2)
       left_rectangle_width = int(image_width * width)
       left_rectangle_height = int(image_height * height)
-  
+
+      boundaries = ((left_rectangle_x/image_width), 1-(left_rectangle_y/image_height), 1-(left_rectangle_x + left_rectangle_width)/image_width, 1-(left_rectangle_y + left_rectangle_height)/image_height)
       cv2.rectangle(image, (left_rectangle_x, left_rectangle_y), (left_rectangle_x + left_rectangle_width, left_rectangle_y + left_rectangle_height), (0, 255, 0), 2)
+
       cv2.imshow('Output', cv2.flip(image, 1))
       
       
@@ -86,37 +97,45 @@ def get_joint_angles(results):
     # See link below for location of body parts
     # https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
     left_wrist = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST]
-    
-    part_of_screen = 30
-    #   print("Left wrist ", left_wrist.x, " Right wrist ",  left_wrist.y)
-    multiplier = 1
-    if(np.abs(left_wrist.y - prev_left_wrist_y) < 1/part_of_screen):
-        multiplier = 2    
-    else:
-        print("speed ", left_wrist.y, " prev ", prev_left_wrist_y)
-    if (left_wrist.y < max_coord and left_wrist.y > min_coord):
-        speed=(left_wrist.y-0.5)*(-multiplier)
-    else:
-        speed = None
+    # print(boundaries)
+    # (0.45, 0.15, 0.050000000000000044, 0.85)
 
-    multiplier = 0.2
-    if(np.abs(left_wrist.x - prev_left_wrist_x) < 1/part_of_screen):
-        multiplier = 0.75
+    if (left_wrist.x > boundaries[0]) and (left_wrist.x < 1-boundaries[2]) and left_wrist.y <  boundaries[1] and left_wrist.y > boundaries[3]:
+        # Hand is within boundaries
+        # Add your code here
+        part_of_screen = 30
+        multiplier = 1
+        if(np.abs(left_wrist.y - prev_left_wrist_y) < 1/part_of_screen):
+            multiplier = 2    
+        else:
+            print("speed ", left_wrist.y, " prev ", prev_left_wrist_y)
+        if (left_wrist.y < max_coord and left_wrist.y > min_coord):
+            speed=(left_wrist.y-0.5)*(-multiplier)
+        else:
+            speed = None
+
+        multiplier = 0.2
+        if(np.abs(left_wrist.x - prev_left_wrist_x) < 1/part_of_screen):
+            multiplier = 0.75
+        else:
+            print("direction ", left_wrist.x, " prev ", prev_left_wrist_x)
+        if (left_wrist.x < max_coord and left_wrist.x > min_coord):
+            direction=(left_wrist.x-0.5)*multiplier
+        else:
+            direction = None
+        
+        if speed != None and direction != None: 
+            command = [speed, direction]
+        else: 
+            command = None
+        
+        prev_left_wrist_x = left_wrist.x
+        prev_left_wrist_y = left_wrist.y
     else:
-        print("direction ", left_wrist.x, " prev ", prev_left_wrist_x)
-    if (left_wrist.x < max_coord and left_wrist.x > min_coord):
-        direction=(left_wrist.x-0.5)*multiplier
-    else:
-        direction = None
-    
-    if speed != None and direction != None: 
-        command = [speed, direction]
-    else: 
+        print(left_wrist.x, left_wrist.y)
         command = None
-    
-    prev_left_wrist_x = left_wrist.x
-    prev_left_wrist_y = left_wrist.y
     return command
+
   
 if __name__ == "__main__":
   
