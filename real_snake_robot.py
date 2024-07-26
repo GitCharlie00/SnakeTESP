@@ -12,13 +12,12 @@ class Main(mujoco_snake.Main):
     def run(self):
         snake_robot_ip = "10.240.77.116"
         snake_robot_port = 5000
-
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         self.time_step = 0.12
         while True:
             step_start = time.time()
-            self.media_pipe_communication
+            self.media_pipe_communication()
 
             target_q = self.get_target_q()
             message = ",".join(map(str, target_q))
