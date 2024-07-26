@@ -12,3 +12,9 @@ SnakeTESP is a project that involves controlling a snake robot using various met
 1. Clone the repository:
    ```bash
    git clone https://github.com/GitCharlie00/SnakeTESP.git
+
+2. SSH into the Raspberry Pi
+
+3. Run the **setup_raspberry_snake.sh** to activate the virtual environment, changing to the project directory and start motor control program to start receiving signals.
+
+4. Run **real_snake_robot.py** to send control signals.

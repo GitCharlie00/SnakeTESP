@@ -15,7 +15,8 @@ class Main:
     self.snake_max = 3
     self.frequency = 0
     self.old_frequency = 0
-    self.amp = 0.5
+    # self.amp = 0.5
+    self.amp = 0.3
     self.start=False
     self.offset = 0
     self.direction = 1
@@ -99,7 +100,6 @@ class Main:
     return p
 
   #  make it theta += omega*timestep
-
 
 
   def get_target_q(self):

@@ -66,22 +66,34 @@ def get_joint_angles(results):
   # https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker
   left_wrist = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST]
   midpoint = 0.5
-  max = 0.95
-  min = 0.05
-  print("Left wrist ", left_wrist.x, " Right wrist ",  left_wrist.y)
-  if (left_wrist.y < max and left_wrist.y > min):
-    speed=(left_wrist.y-0.5)*(-2)
+
+  # Left Wrist Range
+  # Previous values
+  # max_value = 0.95
+  # min_value = 0.05
+
+  max_value = 0.90
+  min_value = 0.10
+  speed_factor = 5.0
+  # direction_factor = 0.75
+  direction_factor = 0.5
+
+  # print("Left wrist (x)", left_wrist.x, "Left wrist (y)",  left_wrist.y)
+  if (left_wrist.y < max_value and left_wrist.y > min_value):
+    # speed=(left_wrist.y-0.5)*(-2)
+    speed = (left_wrist.y-midpoint)*(-speed_factor)
   else:
     speed = None
   
-  if (left_wrist.x < max and left_wrist.x > min):
-    direction=(left_wrist.x-0.5)*0.75
+  if (left_wrist.x < max_value and left_wrist.x > min_value):
+    direction=(left_wrist.x-midpoint)*direction_factor
   else:
     direction = None
 
   
   if speed != None and direction != None: 
     command = [speed, direction]
+    print("speed: ", speed, "direction: ", direction)
   else: 
     command = None
   return command
