@@ -24,6 +24,9 @@ min_coord = 0.05
 max_coord = 0.95
 midpoint = 0.5
 
+_prev_speed = 0
+_prev_direction = 0
+
 def main(use_socket=True, ip="127.0.0.1", port=8000):
   global boundaries
   cap = cv2.VideoCapture(0)
@@ -60,7 +63,7 @@ def main(use_socket=True, ip="127.0.0.1", port=8000):
 
       # Create a rectangle on the left side of the image
       image_height, image_width, _ = image.shape
-      print(image_height, image_width)
+    
       left_rectangle_x = int(image_width * rectangle_coord)
       left_rectangle_y = int(image_height * midpoint - (height * image_height) / 2)
       left_rectangle_width = int(image_width * width)
@@ -89,9 +92,14 @@ def main(use_socket=True, ip="127.0.0.1", port=8000):
 
     if use_socket:
         client_socket.close()
-
+def smoother_function(current_speed, wanted_speed, dv):
+    if current_speed < wanted_speed:
+        current_speed += dv
+    elif current_speed > wanted_speed:
+        current_speed -= dv
+    return current_speed
 def get_joint_angles(results):
-    global prev_left_wrist_x, prev_left_wrist_y
+    global prev_left_wrist_x, prev_left_wrist_y, _prev_speed, _prev_direction
     # Add your code here
     # For example, to get right shoulder location, use [results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x, results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y]
     # See link below for location of body parts
@@ -103,37 +111,54 @@ def get_joint_angles(results):
     if (left_wrist.x > boundaries[0]) and (left_wrist.x < 1-boundaries[2]) and left_wrist.y <  boundaries[1] and left_wrist.y > boundaries[3]:
         # Hand is within boundaries
         # Add your code here
-        part_of_screen = 30
-        multiplier = 1
-        if(np.abs(left_wrist.y - prev_left_wrist_y) < 1/part_of_screen):
-            multiplier = 2    
-        else:
-            print("speed ", left_wrist.y, " prev ", prev_left_wrist_y)
+        midpoint = boundaries[0] + (1-boundaries[2] - boundaries[0])/2
+        
         if (left_wrist.y < max_coord and left_wrist.y > min_coord):
-            speed=(left_wrist.y-0.5)*(-multiplier)
+            #max is +/- 1.5 
+            speed=(left_wrist.y-0.5)*(-5)
+            if(speed > 1.5):
+                speed = 1.5
+            elif(speed < -1.5):
+                speed = -1.5
+            if(speed > 0 and _prev_speed < 0):
+                _prev_speed = 0
+            if(speed < 0 and _prev_speed > 0):
+                _prev_speed = 0
+            speed = smoother_function(_prev_speed, speed, 0.01)
         else:
             speed = None
+        if speed is not None:
+            _prev_speed = speed
 
-        multiplier = 0.2
-        if(np.abs(left_wrist.x - prev_left_wrist_x) < 1/part_of_screen):
-            multiplier = 0.75
-        else:
-            print("direction ", left_wrist.x, " prev ", prev_left_wrist_x)
         if (left_wrist.x < max_coord and left_wrist.x > min_coord):
-            direction=(left_wrist.x-0.5)*multiplier
+            direction=(left_wrist.x-midpoint)*1
+            #max is +/- 0.25
+            if(direction > 0.25):
+                direction = 0.25
+            elif(direction < -0.25):
+                direction = -0.25
+            if(direction > 0 and _prev_direction < 0):
+                _prev_direction = 0
+            if(direction < 0 and _prev_direction > 0):
+                _prev_direction = 0
+            direction = smoother_function(_prev_direction, direction, 0.01)
         else:
             direction = None
+
+        if direction is not None:
+            _prev_direction = direction
         
         if speed != None and direction != None: 
             command = [speed, direction]
         else: 
-            command = None
+            command = None  
         
         prev_left_wrist_x = left_wrist.x
         prev_left_wrist_y = left_wrist.y
     else:
-        print(left_wrist.x, left_wrist.y)
         command = None
+    print(command)  
+    # command = None
     return command
 
   
