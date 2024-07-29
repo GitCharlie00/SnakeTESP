@@ -8,6 +8,7 @@ class Main(mujoco_snake.Main):
     
     def __init__(self):
         super().__init__()
+        self.log_file = open("target_q_log.txt", "w")  
 
     def run(self):
         snake_robot_ip = "10.240.77.116"
@@ -23,10 +24,21 @@ class Main(mujoco_snake.Main):
             message = ",".join(map(str, target_q))
 
             client_socket.sendto(message.encode(), (snake_robot_ip, snake_robot_port))
+            
+            # Log target_q
+            print(self.log)
+            if self.log:
+              np.savetxt(self.log_file, [target_q], fmt='%.6f', delimiter=',')
+              self.log_file.flush() 
 
             time_until_next_step = self.time_step - (time.time() - step_start)
+
             if time_until_next_step > 0:
               time.sleep(time_until_next_step)
+
+    def __del__(self):
+      if hasattr(self, 'log_file'):
+        self.log_file.close()
 
 if __name__ == "__main__":
   use_socket = True
