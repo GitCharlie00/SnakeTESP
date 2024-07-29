@@ -3,6 +3,8 @@ import pickle
 import numpy as np
 import cv2
 import mediapipe as mp
+import time
+
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
@@ -26,6 +28,9 @@ midpoint = 0.5
 
 _prev_speed = 0
 _prev_direction = 0
+
+_hands_out_of_frame = False
+_time_out_of_frame = 0
 
 def main(use_socket=True, ip="127.0.0.1", port=8000):
   global boundaries
@@ -70,11 +75,14 @@ def main(use_socket=True, ip="127.0.0.1", port=8000):
       left_rectangle_height = int(image_height * height)
 
       boundaries = ((left_rectangle_x/image_width), 1-(left_rectangle_y/image_height), 1-(left_rectangle_x + left_rectangle_width)/image_width, 1-(left_rectangle_y + left_rectangle_height)/image_height)
-      cv2.rectangle(image, (left_rectangle_x, left_rectangle_y), (left_rectangle_x + left_rectangle_width, left_rectangle_y + left_rectangle_height), (0, 255, 0), 2)
 
+      if not _hands_out_of_frame:      
+        cv2.rectangle(image, (left_rectangle_x, left_rectangle_y), (left_rectangle_x + left_rectangle_width, left_rectangle_y + left_rectangle_height), (0, 255, 0), 2)
+      elif _hands_out_of_frame and (time.time() - _time_out_of_frame) < 3:
+        cv2.rectangle(image, (left_rectangle_x, left_rectangle_y), (left_rectangle_x + left_rectangle_width, left_rectangle_y + left_rectangle_height), (0, 255, 255), 2)
+      else:
+        cv2.rectangle(image, (left_rectangle_x, left_rectangle_y), (left_rectangle_x + left_rectangle_width, left_rectangle_y + left_rectangle_height), (0, 0, 255), 2)
       cv2.imshow('Output', cv2.flip(image, 1))
-      
-      
 
       if results.pose_landmarks:
         data = get_joint_angles(results)
@@ -99,7 +107,7 @@ def smoother_function(current_speed, wanted_speed, dv):
         current_speed -= dv
     return current_speed
 def get_joint_angles(results):
-    global prev_left_wrist_x, prev_left_wrist_y, _prev_speed, _prev_direction
+    global prev_left_wrist_x, prev_left_wrist_y, _prev_speed, _prev_direction, _hands_out_of_frame, _time_out_of_frame
     # Add your code here
     # For example, to get right shoulder location, use [results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x, results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y]
     # See link below for location of body parts
@@ -109,6 +117,8 @@ def get_joint_angles(results):
     # (0.45, 0.15, 0.050000000000000044, 0.85)
 
     if (left_wrist.x > boundaries[0]) and (left_wrist.x < 1-boundaries[2]) and left_wrist.y <  boundaries[1] and left_wrist.y > boundaries[3]:
+        _hands_out_of_frame = False
+
         # Hand is within boundaries
         # Add your code here
         midpoint = boundaries[0] + (1-boundaries[2] - boundaries[0])/2
@@ -156,9 +166,13 @@ def get_joint_angles(results):
         prev_left_wrist_x = left_wrist.x
         prev_left_wrist_y = left_wrist.y
     else:
+        if _hands_out_of_frame is False:
+            _time_out_of_frame = time.time()
+        _hands_out_of_frame = True
         command = None
-    print(command)  
-    # command = None
+    if time.time() - _time_out_of_frame > 3:
+        command = [0, 0]
+    print(command)
     return command
 
   
