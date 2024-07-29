@@ -21,6 +21,7 @@ class Main:
     self.offset = 0
     self.direction = 1
     self.theta = 0
+    self.log = False
 
   #TODO: implement change direct
   def run(self):
@@ -41,7 +42,7 @@ class Main:
       
       while viewer.is_running():
         step_start = time.time()
-        if(self.data != None):
+        if(self.data is not None):
           if self.data[0] is not None:
             self.frequency = self.data[0]
           if self.data[1] is not None:
@@ -68,6 +69,7 @@ class Main:
         #   self.frequency = self.data[0]
         self.frequency = self.data[0]
       if self.data[1] is not None:
+        self.log = True
         self.offset = self.data[1]
       print(self.data)
     else:
@@ -106,6 +108,8 @@ class Main:
     # Snake controller
     return self.move_snake(self.amp, self.frequency, self.offset, self.direction)
     
+  def get_is_log(self):
+    return self.log
 
 
 if __name__ == "__main__":
