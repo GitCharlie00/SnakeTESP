@@ -11,7 +11,7 @@ class Main(mujoco_snake.Main):
         self.log_file = open("target_q_log.txt", "w")  
 
     def run(self):
-        snake_robot_ip = "10.240.77.116"
+        snake_robot_ip = "192.168.1.207"
         snake_robot_port = 5000
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 

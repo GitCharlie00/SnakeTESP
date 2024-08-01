@@ -124,7 +124,7 @@ def get_joint_angles(results):
                 _prev_speed = 0
             if(speed < 0 and _prev_speed > 0):
                 _prev_speed = 0
-            speed = smoother_function(_prev_speed, speed, 0.01)
+            speed = smoother_function(_prev_speed, speed, 0.05)
         else:
             speed = None
         if speed is not None:
