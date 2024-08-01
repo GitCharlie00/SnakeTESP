@@ -27,6 +27,8 @@ midpoint = 0.5
 _prev_speed = 0
 _prev_direction = 0
 
+max_speed = 2.5
+
 def main(use_socket=True, ip="127.0.0.1", port=8000):
   global boundaries
   cap = cv2.VideoCapture(0)
@@ -117,14 +119,14 @@ def get_joint_angles(results):
             #max is +/- 1.5 
             speed=(left_wrist.y-0.5)*(-5)
             if(speed > 1.5):
-                speed = 1.5
+                speed = max_speed
             elif(speed < -1.5):
-                speed = -1.5
+                speed = -max_speed
             if(speed > 0 and _prev_speed < 0):
                 _prev_speed = 0
             if(speed < 0 and _prev_speed > 0):
                 _prev_speed = 0
-            speed = smoother_function(_prev_speed, speed, 0.05)
+            speed = smoother_function(_prev_speed, speed, 0.025)
         else:
             speed = None
         if speed is not None:
@@ -141,7 +143,7 @@ def get_joint_angles(results):
                 _prev_direction = 0
             if(direction < 0 and _prev_direction > 0):
                 _prev_direction = 0
-            direction = smoother_function(_prev_direction, direction, 0.01)
+            direction = smoother_function(_prev_direction, direction, 0.001)
         else:
             direction = None
 
